@@ -34,15 +34,22 @@ public class ShowingCodeAndToken extends JFrame {
     public static void main(String... args) throws IOException, GeneralSecurityException {
 
         TokenNotifications gmail = null;
+        byte[] data = null;
 
         try {
             gmail = new TokenNotifications();
             ShowingCodeAndToken show = new ShowingCodeAndToken();
-            show.run(gmail.getLastToken());
-
+            data = gmail.getLastToken();
+            if (data != null) {
+                show.run(data);
+            }
             while (true) {
                 show = new ShowingCodeAndToken();
-                show.run(gmail.getNewTokenPushNotifications());
+                data = gmail.getNewTokenPushNotifications();
+
+                if (data != null) {
+                    show.run(data);
+                }
             }
         } catch (Exception ex) {
             System.out.println("Se produjo un error!!! " + ex.getLocalizedMessage() + " " + ex.getMessage());
