@@ -25,7 +25,9 @@ import java.io.ByteArrayInputStream;
 import com.google.api.services.gmail.Gmail;
 import com.google.api.services.gmail.model.History;
 import com.google.api.services.gmail.model.HistoryMessageAdded;
+import com.google.api.services.gmail.model.Label;
 import com.google.api.services.gmail.model.ListHistoryResponse;
+import com.google.api.services.gmail.model.ListLabelsResponse;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.InputStreamReader;
@@ -33,11 +35,12 @@ import java.math.BigInteger;
 import java.security.GeneralSecurityException;
 import java.util.ArrayList;
 import java.util.Collections;
-import java.util.LinkedList;
 import java.util.List;
 import java.util.Properties;
 import java.util.concurrent.BlockingQueue;
 import java.util.concurrent.LinkedBlockingDeque;
+import java.util.logging.Level;
+import java.util.logging.Logger;
 import javax.mail.MessagingException;
 import javax.mail.Session;
 import javax.mail.internet.MimeMessage;
@@ -60,28 +63,39 @@ public class TokenNotifications {
     private static final BlockingQueue<PubsubMessage> messages = new LinkedBlockingDeque<>();
 
     private static final String user = "me";
-    private static final String idLabel_TokenMexitel = "Label_402207207227935324";
+    private static String idLabel_TokenMexitel;
+    private static String LabelTokenMexitelName = "TokenMexitel";
+//    = "Label_402207207227935324"
     private BigInteger currentHistoryID;
     private BigInteger lastHistoryID;
+    private String topicId = "Tokens";
+    private String subscriptionId = "NewTokens";
     Subscriber subscriber;
 
     private Gmail service;
 
-    public TokenNotifications() throws IOException, GeneralSecurityException {
+    TokenSubscription subscription;
+
+    public TokenNotifications() throws Exception {
         // Build a new authorized API client service.
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
+        getTokenMexitelLabelId();
+        setUpSubscription();
+        setUpSubscriber();
+    }
 
-        ListMessagesResponse rsp = service.users().messages().list(user).setMaxResults(Long.valueOf("1")).execute();
-        String id = rsp.getMessages().get(0).getId();
-        Message last = service.users().messages().get(user, id).execute();
-        lastHistoryID = last.getHistoryId();
+    public void setUpSubscription() throws Exception {
+        subscription = new TokenSubscription(service, PROJECT_ID, topicId, subscriptionId, idLabel_TokenMexitel);
+        lastHistoryID = subscription.setUpSuscriberNotif();
+    }
+
+    public void setUpSubscriber() {
         subscriber = null;
 
-        String subscriptionId = "yhacaribegmail";
         ProjectSubscriptionName subscriptionName = ProjectSubscriptionName.of(PROJECT_ID, subscriptionId).of(PROJECT_ID, subscriptionId);
 
 //             create a subscriber bound to the asynchronous message receiver
@@ -89,7 +103,6 @@ public class TokenNotifications {
                 = Subscriber.newBuilder(subscriptionName, new TokenNotifications.MessageReceiverExample()).build();
 
         subscriber.startAsync().awaitRunning();
-
     }
 
     public static class MessageReceiverExample implements MessageReceiver {
@@ -129,7 +142,8 @@ public class TokenNotifications {
         //  Message ms=getMessage(service, user, APPLICATION_NAME);
         //  ms.getId();
 
-//        ListMessagesResponse listMesgs = service.users().messages().list(user).execute();
+        System.out.println("Buscando ultimo token " + idLabel_TokenMexitel);
+
         List<Message> messages = listMessagesWithLabels(service, user, Collections.singletonList(idLabel_TokenMexitel));
         if (messages.isEmpty()) {
             System.out.println("No se encontraron correos con token.");
@@ -153,8 +167,12 @@ public class TokenNotifications {
         PubsubMessage message = messages.take();
 //            String messageID = message.getMessageId();
         String aux = message.getData().toStringUtf8();
+        System.out.println(message.getData());
         int charatcterStart = aux.indexOf("historyId") + 11;
+
         currentHistoryID = BigInteger.valueOf(Long.valueOf(aux.substring(charatcterStart, aux.length() - 1)));
+
+        System.out.println("HistoryID " + currentHistoryID);
 
         String token = listHistoryTokens(service, user, lastHistoryID);
 
@@ -168,9 +186,26 @@ public class TokenNotifications {
         return dataPdf;
     }
 
-    public void stopSync() {
-        if (subscriber != null) {
-            subscriber.stopAsync();
+    public void tearDown() {
+        try {
+
+            if (subscriber != null) {
+                System.out.println("Deteniendo subscriptor...");
+                subscriber.stopAsync();
+            }
+
+            if (subscription != null) {
+
+                System.out.println("Eliminando subscripcion...");
+                subscription.tearDown();
+
+            }
+            System.out.println("Deteniendo servicio Gmail API...");
+
+            service.users().stop(user);
+        } catch (Exception ex) {
+            Logger.getLogger(TokenNotifications.class.getName()).log(Level.SEVERE, null, ex);
+            System.out.println("Error demoliendo...");
         }
     }
 
@@ -233,6 +268,8 @@ public class TokenNotifications {
             throws IOException {
         List<History> histories = new ArrayList<History>();
         ListHistoryResponse response = service.users().history().list(userId).setStartHistoryId(lastHistoryID).setLabelId(idLabel_TokenMexitel).execute();
+//        ListHistoryResponse response = service.users().history().list(userId).setStartHistoryId(lastHistoryID).setMaxResults(Long.valueOf("1")).execute();
+
 //        System.out.println("Respuesta history" + response);
         while (response.getHistory() != null) {
             histories.addAll(response.getHistory());
@@ -251,8 +288,8 @@ public class TokenNotifications {
             if (msgadd != null) {
                 for (HistoryMessageAdded hstmsg : msgadd) {
                     Message msg = hstmsg.getMessage();
-                    System.out.println("Mensaje info: Label: " + msg.getLabelIds()
-                            + " ID:" + msg.getId());
+//                    System.out.println("Mensaje info: Label: " + msg.getLabelIds()
+//                            + " ID:" + msg.getId());
                     token = msg.getId();
                 }
             }
@@ -289,33 +326,6 @@ public class TokenNotifications {
     }
 
     /**
-     * List all Messages of the user's mailbox matching the query.
-     *
-     * @param service Authorized Gmail API instance.
-     * @param userId User's email address. The special value "me" can be used to
-     * indicate the authenticated user.
-     * @param query String used to filter the Messages listed.
-     * @throws IOException
-     */
-    public static List<Message> listMessagesMatchingQuery(Gmail service, String userId,
-            String query) throws IOException {
-        ListMessagesResponse response = service.users().messages().list(userId).setQ(query).execute();
-
-        List<Message> messages = new ArrayList<Message>();
-        while (response.getMessages() != null) {
-            messages.addAll(response.getMessages());
-            if (response.getNextPageToken() != null) {
-                String pageToken = response.getNextPageToken();
-                response = service.users().messages().list(userId).setQ(query)
-                        .setPageToken(pageToken).execute();
-            } else {
-                break;
-            }
-        }
-        return messages;
-    }
-
-    /**
      * List all Messages of the user's mailbox with labelIds applied.
      *
      * @param service Authorized Gmail API instance.
@@ -342,6 +352,24 @@ public class TokenNotifications {
         }
 
         return messages;
+    }
+
+    public void getTokenMexitelLabelId() throws IOException {
+        // Print the labels in the user's account.
+        String user = "me";
+        ListLabelsResponse listResponse = service.users().labels().list(user).execute();
+        List<Label> labels = listResponse.getLabels();
+        if (labels.isEmpty()) {
+            System.out.println("No labels found.");
+        } else {
+
+            for (Label label : labels) {
+                if (label.getName().equals(LabelTokenMexitelName)) {
+                    System.out.println("Label TokenMexitelID: " + label.getId());
+                    idLabel_TokenMexitel = label.getId();
+                }
+            }
+        }
     }
 
     // ...

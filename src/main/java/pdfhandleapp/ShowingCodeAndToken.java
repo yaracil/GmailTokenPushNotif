@@ -5,6 +5,7 @@ package pdfhandleapp;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
+import com.google.api.services.gmail.Gmail;
 import java.awt.BorderLayout;
 import java.awt.Font;
 import java.awt.Toolkit;
@@ -22,6 +23,8 @@ import javax.swing.JLabel;
 import javax.swing.JOptionPane;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
+import javax.swing.WindowConstants;
+import javax.swing.plaf.basic.BasicInternalFrameTitlePane;
 import javax.swing.text.BadLocationException;
 import mygmailapi.TokenNotifications;
 import org.apache.pdfbox.pdmodel.PDDocument;
@@ -31,38 +34,11 @@ import org.apache.pdfbox.text.PDFTextStripperByArea;
 
 public class ShowingCodeAndToken extends JFrame {
 
-    public static void main(String... args) throws IOException, GeneralSecurityException {
+    private static TokenNotifications gmail;
+    private static boolean beOn = true;
+    private static ShowingCodeAndToken showing;
 
-        TokenNotifications gmail = null;
-        byte[] data = null;
-
-        try {
-            gmail = new TokenNotifications();
-            ShowingCodeAndToken show = new ShowingCodeAndToken();
-            data = gmail.getLastToken();
-            if (data != null) {
-                show.run(data);
-            }
-            while (true) {
-                show = new ShowingCodeAndToken();
-                data = gmail.getNewTokenPushNotifications();
-
-                if (data != null) {
-                    show.run(data);
-                }
-            }
-        } catch (Exception ex) {
-            System.out.println("Se produjo un error!!! " + ex.getLocalizedMessage() + " " + ex.getMessage());
-            Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
-        } finally {
-            if (gmail != null) {
-                gmail.stopSync();
-            }
-        }
-
-    }
-
-    public void run(byte[] pdfData) {
+    public void show(byte[] pdfData) {
 
         try (PDDocument document = PDDocument.load(pdfData)) {
 
@@ -86,39 +62,95 @@ public class ShowingCodeAndToken extends JFrame {
         }
     }
 
-    public void run(String pdf) {
+    public void run() throws Exception {
 
-        ShowingCodeAndToken window = new ShowingCodeAndToken();
+        byte[] data = null;
+        showing = new ShowingCodeAndToken(gmail);
 
-        try (PDDocument document = PDDocument.load(new File(pdf))) {
+        data = gmail.getLastToken();
+        if (data != null) {
+            showing.show(data);
+        }
+        while (beOn) {
+            showing = new ShowingCodeAndToken(gmail);
 
-            document.getClass();
-            if (!document.isEncrypted()) {
-                String code = window.gettingPdfText(document);
+            data = gmail.getNewTokenPushNotifications();
 
-                PDPage pagina = document.getPages().get(0);
-                GetImageToken printer = new GetImageToken();
-                printer.processPage(pagina);
-                ImageIcon imageic = printer.getImageic();
-
-                String token = crackImage("testing.jpg");
-
-                window.setTextAndImage(code, token, imageic);
-                window.setVisible(true);
+            if (data != null) {
+                showing.show(data);
+            } else {
+                System.out.println("NO ES TOKEN");
             }
-        } catch (Exception ex) {
+        }
+
+    }
+
+    @Override
+    public void dispose() {
+        super.dispose(); //To change body of generated methods, choose Tools | Templates.
+        System.out.println("...droping...");
+        if (gmail != null) {
+            gmail.tearDown();
+        } else {
+            System.out.println("Gmail service NULL");
+        }
+        beOn = false;
+        System.out.println("...droping finished...");
+        try {
+            this.finalize();
+
+        } catch (Throwable ex) {
             Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(null, "Error de impresion", "Error", JOptionPane.ERROR_MESSAGE);
         }
     }
 
-    public ShowingCodeAndToken() {
+    public static void main(String... args) {
+        try {
+            TokenNotifications gmail = new TokenNotifications();
+
+            ShowingCodeAndToken showing = new ShowingCodeAndToken(gmail);
+            showing.run();
+        } catch (Exception ex) {
+            Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
+        }
+
+    }
+
+//
+//    public void run(String pdf) {
+//
+//        ShowingCodeAndToken window = new ShowingCodeAndToken();
+//
+//        try (PDDocument document = PDDocument.load(new File(pdf))) {
+//
+//            document.getClass();
+//            if (!document.isEncrypted()) {
+//                String code = window.gettingPdfText(document);
+//
+//                PDPage pagina = document.getPages().get(0);
+//                GetImageToken printer = new GetImageToken();
+//                printer.processPage(pagina);
+//                ImageIcon imageic = printer.getImageic();
+//
+//                String token = crackImage("testing.jpg");
+//
+//                window.setTextAndImage(code, token, imageic);
+//                window.setVisible(true);
+//            }
+//        } catch (Exception ex) {
+//            Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
+//            JOptionPane.showMessageDialog(null, "Error de impresion", "Error", JOptionPane.ERROR_MESSAGE);
+//        }
+//    }
+    public ShowingCodeAndToken(TokenNotifications gmail) throws Exception {
         super();
+        this.gmail = gmail;
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Online First Person Shooter");
         setAlwaysOnTop(true);
         setResizable(false);
         setLocation(350, 5);
+        setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
     }
 
