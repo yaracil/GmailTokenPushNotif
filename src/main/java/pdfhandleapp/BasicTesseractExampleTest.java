@@ -25,7 +25,7 @@ public class BasicTesseractExampleTest {
         outText = api.GetUTF8Text();
         String string = outText.getString();
 //        assertTrue(!string.isEmpty());
-        System.out.println("OCR output:\n" + string);
+//        System.out.println("OCR output:\n" + string);
 
         // Destroy used object and release memory
         api.End();

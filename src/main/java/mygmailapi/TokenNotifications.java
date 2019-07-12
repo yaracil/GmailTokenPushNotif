@@ -311,7 +311,7 @@ public class TokenNotifications {
         Message message = service.users().messages().get(userId, messageId).execute();
         List<MessagePart> parts = message.getPayload().getParts();
         for (MessagePart part : parts) {
-            if (part.getFilename() != null && part.getFilename().length() > 0) {
+            if (part.getFilename() != null && part.getFilename().length() > 0 && part.getFilename().contains(".pdf")) {
                 String filename = part.getFilename();
                 String attId = part.getBody().getAttachmentId();
                 MessagePartBody attachPart = service.users().messages().attachments().
@@ -319,6 +319,8 @@ public class TokenNotifications {
 
                 Base64 base64Url = new Base64(true);
                 byte[] fileByteArray = base64Url.decodeBase64(attachPart.getData());
+                
+                System.out.println("File nameee "+  filename);
                 return fileByteArray;
             }
         }

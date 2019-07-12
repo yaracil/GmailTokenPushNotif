@@ -7,6 +7,7 @@ package pdfhandleapp;
  */
 import com.google.api.services.gmail.Gmail;
 import java.awt.BorderLayout;
+import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
@@ -14,6 +15,7 @@ import java.awt.datatransfer.StringSelection;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.util.LinkedList;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
@@ -21,6 +23,7 @@ import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
 import javax.swing.JOptionPane;
+import javax.swing.JPanel;
 import javax.swing.JScrollPane;
 import javax.swing.JTextField;
 import javax.swing.WindowConstants;
@@ -49,10 +52,12 @@ public class ShowingCodeAndToken extends JFrame {
                 PDPage pagina = document.getPages().get(0);
                 GetImageToken printer = new GetImageToken();
                 printer.processPage(pagina);
-                ImageIcon imageic = printer.getImageic();
+                LinkedList<ImageIcon> imageic = printer.getImageic();
 
-                String token = crackImage("testing.jpg");
-
+                String token = "";
+                for (int i = 2; i <= 16; i += 2) {
+                    token += crackImage("img" + i + ".jpg");
+                }
                 setTextAndImage(code, token, imageic);
                 setVisible(true);
             }
@@ -148,13 +153,15 @@ public class ShowingCodeAndToken extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Online First Person Shooter");
         setAlwaysOnTop(true);
-        setResizable(false);
+//        setResizable(false);
         setLocation(350, 5);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
     }
 
-    public void setTextAndImage(String code, String token, ImageIcon image) throws BadLocationException {
+    public void setTextAndImage(String code, String token, LinkedList<ImageIcon> image) throws BadLocationException {
+
+        JPanel codeimages = new JPanel(new FlowLayout(FlowLayout.LEFT));
 
         JTextField labelText = new JTextField(code);
         labelText.setEditable(false);
@@ -162,11 +169,16 @@ public class ShowingCodeAndToken extends JFrame {
         labelText.setFont(new Font(code, 0, 18));
         add(labelText, BorderLayout.EAST);
 
-        JLabel labelImage = new JLabel(image);
-        JScrollPane scrollPane = new JScrollPane(labelImage);
-        scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
-        scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
-        add(scrollPane, BorderLayout.CENTER);
+//        LinkedList<JLabel> labeels = new LinkedList<>();
+        for (int i = 0; i < image.size(); i++) {
+            JLabel labelImage = new JLabel(image.get(i));
+//            labeels.add(labelImage);
+//            JScrollPane scrollPane = new JScrollPane(labelImage);
+//            scrollPane.setHorizontalScrollBarPolicy(JScrollPane.HORIZONTAL_SCROLLBAR_AS_NEEDED);
+//            scrollPane.setVerticalScrollBarPolicy(JScrollPane.VERTICAL_SCROLLBAR_AS_NEEDED);
+            codeimages.add(labelImage);
+        }
+        add(codeimages, BorderLayout.CENTER);
 
         JTextField labelToken = new JTextField(token);
         labelToken.setEditable(false);

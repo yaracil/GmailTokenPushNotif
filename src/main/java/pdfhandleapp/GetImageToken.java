@@ -9,6 +9,7 @@ import java.io.File;
 import java.io.FileOutputStream;
 import java.io.IOException;
 import java.io.OutputStream;
+import java.util.LinkedList;
 import java.util.List;
 import javax.swing.ImageIcon;
 import org.apache.pdfbox.cos.COSBase;
@@ -28,7 +29,7 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 
 public class GetImageToken extends PDFStreamEngine {
 
-    ImageIcon imageic;
+    LinkedList<ImageIcon> imageic;
 
     public GetImageToken() throws IOException {
         addOperator(new Concatenate());
@@ -37,7 +38,7 @@ public class GetImageToken extends PDFStreamEngine {
         addOperator(new Save());
         addOperator(new Restore());
         addOperator(new SetMatrix());
-        imageic = null;
+        imageic = new LinkedList<ImageIcon>();
     }
 
     /**
@@ -50,15 +51,19 @@ public class GetImageToken extends PDFStreamEngine {
      */
     protected void processOperator(Operator operador, List<COSBase> operands) throws IOException {
         String operacion = operador.getName();
+
         if ("Do".equals(operacion)) {
             COSName objectName = (COSName) operands.get(0);
             PDXObject xobject = getResources().getXObject(objectName);
             if (xobject instanceof PDImageXObject) {
                 PDImageXObject image = (PDImageXObject) xobject;
-                if (objectName.getName().equals("img2")) {
-                    imageic = new ImageIcon(image.getImage());
-                    final OutputStream stream = new FileOutputStream(new File("testing.jpg"));
-                    ImageIOUtil.writeImage(image.getImage(), "jpeg", (OutputStream) stream, 75, 1);
+                if (objectName.getName().contains("img")) {
+                    int imgen = Integer.valueOf(objectName.getName().replaceFirst("img", ""));
+                    if (imgen % 2 == 0 && imgen >= 2 && imgen <= 16) {
+                        imageic.add(new ImageIcon(image.getImage()));
+                        final OutputStream stream = new FileOutputStream(new File(objectName.getName() + ".jpg"));
+                        ImageIOUtil.writeImage(image.getImage(), "jpeg", (OutputStream) stream, 75, 1);
+                    }
                 }
             } else if (xobject instanceof PDFormXObject) {
                 PDFormXObject form = (PDFormXObject) xobject;
@@ -69,7 +74,7 @@ public class GetImageToken extends PDFStreamEngine {
         }
     }
 
-    public ImageIcon getImageic() {
+    public LinkedList getImageic() {
         return imageic;
     }
 

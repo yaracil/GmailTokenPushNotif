@@ -1,0 +1,12 @@
+{
+  "type": "service_account",
+  "project_id": "tokenmexitel-1554436818172",
+  "private_key_id": "509471c08555c76e4a60b5552fd9688e72a0e35f",
+  "private_key": "-----BEGIN PRIVATE KEY-----\nMIIEvQIBADANBgkqhkiG9w0BAQEFAASCBKcwggSjAgEAAoIBAQCyOUOpK4Ji9Fro\nvLd5augNSFUQOzmFAAyy2D81ASfvQvr4Tx6SX+ul2dAzHlIHCEcCRT5hfh3LzmbG\nZvlxnfnCMPXerKbxZh/HjK6SEfZZ0bjJ/sDIqnNIq622isbpSVq9fyaUZVmL6R0f\nkuWXY4Pn911hGvBT3YdYpM0MSh4u8Yfc6TDu39xMGZAvTp9eaYYBFlEuwxBPNTlj\nsXvTBDWK7fgeynzR4F3o916PwxYHM+xoiC5rDvFNOJ4fbeGXGKPDi7cm6d8RBElp\nM5j9flxvbTd3Pkxhfs6BFZF5Z1IFmaaGSu6LcUwAWawVvgb1D/bt2MbIzyMJ7zxf\nCzkd06F3AgMBAAECggEAK+KI5BuYGBi2V++8N/QYnsisVXpX4AWSmuk/qyQVOseh\n98m3q/BdnLGlICk7poqlvYviX+xHlvtEeF871fvB18zphgK6et+cPK1KASLWJ+jJ\n2UdXHjJGf+LyO+wxLZmH8/hevhS0t4xXxQINcbkp7lENV89j1SrL3Ip8CSYpB4K9\nsY0bg4/BRun3CNdaqGeotzO+XKNsyiAgYW0VPrWItSTKp1RGkw67ZzCFec7fXYDu\nvWchc7IZ1iYnbutB1DhG99FlGPK061cin/ywNnsI2k+QmXmp68ut5y6eiEv6+vUx\nRHK4BYUPh8I5yj7KiVHTiNUHNz3uquAh7Z18cP+CQQKBgQDWF+ZpWnRg0HPBq4vp\nhNPtg3Z5oHB4vQWFJfnv3VD5IDiw132Q4DPMa3aGui0SffDU7Vl9AXA18HrZUB4n\ni/jbOrF9Z55Q0tw0S1tgEH7B9AQLuC5r5uvcLpl4KaK4r1emJdISFqTh2SlpEn+K\ng0I4/VTJW/2B/14Os2OjckHyQQKBgQDVG/RyHI6/9rrl9NKfIxFarBTwTh4n5d5Y\n3ZFeOmSyP9Youylzt0ZqMnotgDfSDSntlnxfLZVI2K0meS02HRSEZALgqMuuQUPW\nJtef0qMUyx6Ag2L6+MaejGD+DRvOG8H+cnpD/JkgaeYtemsra0kv+x6Upi/+3LFK\nIkreV4g1twKBgH+8ls75F0LEXKyK69mSVNf7fe6nmTOQpACDXhKNW8ioPurUR6ju\n/DjVTUypPEcyOUTxsFjzSL4GE2YhdTxnOT2kUU3fSwgyJwxUgdpZPSf/rYJIi/n5\nN3SRoSOew+WpSIRrQGFmfU37QcfdL5e3JQXXsITLi//KG5Zt1d8pRsuBAoGBAMWS\niDsu/K09+qJtKsO8yD8O4M61LcIBm/U5XadFbcvP4SWb918/oDmemKUMhTPpXmDV\nrnKzGP8TWtwbZe4QYdAnxH8yHrtr6I9nLWsP5n/FnH660I4rDEE7lkSSNKAOHflf\nerkDO5fQdkTdhPQZIB4qq3xW4pJfWsKHLnAaKL7bAoGAF/1EExq+1S8yCbttmr8f\nB5W3Bzritz/0oCilW2AQVWdeYtKQzrraOLb2l5gQv3C0YJuHXjhc71+QXuKrXIFF\nfqt5mtylVebZG+OeLfBBvAp75gs2f1dEhovyGE/hJRVSpV+46S2zccHLz4bUiP7y\nl16kp8KEyE7f2gkPsLItAFo=\n-----END PRIVATE KEY-----\n",
+  "client_email": "tablet@tokenmexitel-1554436818172.iam.gserviceaccount.com",
+  "client_id": "108183804888041416652",
+  "auth_uri": "https://accounts.google.com/o/oauth2/auth",
+  "token_uri": "https://oauth2.googleapis.com/token",
+  "auth_provider_x509_cert_url": "https://www.googleapis.com/oauth2/v1/certs",
+  "client_x509_cert_url": "https://www.googleapis.com/robot/v1/metadata/x509/tablet%40tokenmexitel-1554436818172.iam.gserviceaccount.com"
+}
