@@ -89,6 +89,7 @@ public class TokenNotifications {
     }
 
     public void setUpSubscription() throws Exception {
+        System.out.println("Projectttt IDDDD "+PROJECT_ID);
         subscription = new TokenSubscription(service, PROJECT_ID, topicId, subscriptionId, idLabel_TokenMexitel);
         lastHistoryID = subscription.setUpSuscriberNotif();
     }

@@ -5,20 +5,30 @@ package pdfhandleapp;
  * To change this template file, choose Tools | Templates
  * and open the template in the editor.
  */
-import com.google.api.services.gmail.Gmail;
+import com.google.api.services.gmail.model.Label;
 import java.awt.BorderLayout;
+import java.awt.Dimension;
 import java.awt.FlowLayout;
 import java.awt.Font;
 import java.awt.Toolkit;
 import java.awt.datatransfer.Clipboard;
 import java.awt.datatransfer.StringSelection;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
+import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
 import java.security.GeneralSecurityException;
+import java.security.Security;
+import java.util.Collection;
 import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 import javax.swing.ImageIcon;
+import javax.swing.JButton;
 import javax.swing.JDialog;
 import javax.swing.JFrame;
 import javax.swing.JLabel;
@@ -40,27 +50,48 @@ public class ShowingCodeAndToken extends JFrame {
     private static TokenNotifications gmail;
     private static boolean beOn = true;
     private static ShowingCodeAndToken showing;
+    private static String contraseñaPdf = "SIN ESTABLECER";
 
     public void show(byte[] pdfData) {
 
-        try (PDDocument document = PDDocument.load(pdfData)) {
+//        Security.addProvider( new BouncyCastleProvider() );
+        try (PDDocument document = PDDocument.load(pdfData, contraseñaPdf)) {
 
             document.getClass();
-            if (!document.isEncrypted()) {
-                String code = gettingPdfText(document);
+            String code = gettingPdfText(document);
+            PDPage pagina = document.getPages().get(0);
+            int imgToReadLimit = document.isEncrypted() ? 32 : 16;
+            GetImageToken printer = new GetImageToken(imgToReadLimit);
+            printer.processPage(pagina);
+            Map<Integer, ImageIcon> imageic = printer.getImageic();
+            String token = "";
+            if (document.isEncrypted()) {
+                Map<Integer, CodeTokenModel> tokenOrd = new TreeMap<>();
+                for (int i : imageic.keySet()) {
+                    if (i > imageic.size()) {
+                        break;
+                    }
+                    String ind = crackImage("img" + i + ".jpg");
+                    String tok = crackImage("img" + (i + imageic.size()) + ".jpg");
+                    tokenOrd.put(Integer.parseInt(ind), new CodeTokenModel(tok, imageic.get(i + imageic.size())));
+                }
+                List<ImageIcon> tokenOrdImage = new LinkedList<>();
 
-                PDPage pagina = document.getPages().get(0);
-                GetImageToken printer = new GetImageToken();
-                printer.processPage(pagina);
-                LinkedList<ImageIcon> imageic = printer.getImageic();
-
-                String token = "";
-                for (int i = 2; i <= 16; i += 2) {
+                for (int i : tokenOrd.keySet()) {
+                    tokenOrdImage.add(tokenOrd.get(i).getImageToken());
+                    token += tokenOrd.get(i).getToken();
+                }
+                setTextAndImage(code, token, tokenOrdImage);
+            } else {
+                for (int i : imageic.keySet()) {
                     token += crackImage("img" + i + ".jpg");
                 }
-                setTextAndImage(code, token, imageic);
-                setVisible(true);
+                setTextAndImage(code, token, new LinkedList<ImageIcon>(imageic.values()));
             }
+            System.out.println(token);
+
+            setVisible(true);
+//            }
         } catch (Exception ex) {
             Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
             JOptionPane.showMessageDialog(null, "Error de impresion", "Error", JOptionPane.ERROR_MESSAGE);
@@ -159,9 +190,10 @@ public class ShowingCodeAndToken extends JFrame {
 
     }
 
-    public void setTextAndImage(String code, String token, LinkedList<ImageIcon> image) throws BadLocationException {
+    public void setTextAndImage(String code, String token, List<ImageIcon> image) throws BadLocationException {
 
         JPanel codeimages = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel PdfPasswordInfo = new JPanel(new FlowLayout(FlowLayout.LEADING));
 
         JTextField labelText = new JTextField(code);
         labelText.setEditable(false);
@@ -185,6 +217,26 @@ public class ShowingCodeAndToken extends JFrame {
         labelToken.setFont(new Font("mine", 0, 30));
         labelToken.selectAll();
         add(labelToken, BorderLayout.WEST);
+
+        JTextField newPassword = new JTextField(10);
+        newPassword.setFont(new Font("mine", 0, 20));
+        JLabel actualPassword = new JLabel("CONTRASEÑA: "+contraseñaPdf);
+        actualPassword.setFont(new Font("mine", 0, 18));
+        JButton pdfPassword = new JButton("ACTUALIZAR CONTRASEÑA PDF");
+        pdfPassword.setFont(new Font("mine", 0, 18));
+
+        pdfPassword.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                contraseñaPdf = newPassword.getText();
+                actualPassword.setText("CONTRASEÑA: " + contraseñaPdf);
+            }
+        });
+        PdfPasswordInfo.add(newPassword);
+        PdfPasswordInfo.add(actualPassword);
+        PdfPasswordInfo.add(pdfPassword);
+
+        add(PdfPasswordInfo, BorderLayout.AFTER_LAST_LINE);
 
         pack();
 

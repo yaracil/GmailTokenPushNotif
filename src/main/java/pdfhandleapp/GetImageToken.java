@@ -11,6 +11,8 @@ import java.io.IOException;
 import java.io.OutputStream;
 import java.util.LinkedList;
 import java.util.List;
+import java.util.Map;
+import java.util.TreeMap;
 import javax.swing.ImageIcon;
 import org.apache.pdfbox.cos.COSBase;
 import org.apache.pdfbox.cos.COSName;
@@ -29,16 +31,18 @@ import org.apache.pdfbox.tools.imageio.ImageIOUtil;
 
 public class GetImageToken extends PDFStreamEngine {
 
-    LinkedList<ImageIcon> imageic;
+    Map<Integer, ImageIcon> imageic;
+    int imgToReadLimit;
 
-    public GetImageToken() throws IOException {
+    public GetImageToken(int imgToReadLimit) throws IOException {
         addOperator(new Concatenate());
         addOperator(new DrawObject());
         addOperator(new SetGraphicsStateParameters());
         addOperator(new Save());
         addOperator(new Restore());
         addOperator(new SetMatrix());
-        imageic = new LinkedList<ImageIcon>();
+        imageic = new TreeMap<Integer, ImageIcon>();
+        this.imgToReadLimit=imgToReadLimit;
     }
 
     /**
@@ -59,8 +63,8 @@ public class GetImageToken extends PDFStreamEngine {
                 PDImageXObject image = (PDImageXObject) xobject;
                 if (objectName.getName().contains("img")) {
                     int imgen = Integer.valueOf(objectName.getName().replaceFirst("img", ""));
-                    if (imgen % 2 == 0 && imgen >= 2 && imgen <= 16) {
-                        imageic.add(new ImageIcon(image.getImage()));
+                    if (imgen % 2 == 0 && imgen >= 2 && imgen <= imgToReadLimit) {
+                        imageic.put(imgen, new ImageIcon(image.getImage()));
                         final OutputStream stream = new FileOutputStream(new File(objectName.getName() + ".jpg"));
                         ImageIOUtil.writeImage(image.getImage(), "jpeg", (OutputStream) stream, 75, 1);
                     }
@@ -74,7 +78,7 @@ public class GetImageToken extends PDFStreamEngine {
         }
     }
 
-    public LinkedList getImageic() {
+    public Map<Integer, ImageIcon> getImageic() {
         return imageic;
     }
 
