@@ -18,6 +18,7 @@ import java.awt.event.ActionListener;
 import java.awt.image.BufferedImage;
 import java.io.File;
 import java.io.IOException;
+import java.lang.reflect.Field;
 import java.security.GeneralSecurityException;
 import java.security.Security;
 import java.util.Collection;
@@ -53,13 +54,26 @@ public class ShowingCodeAndToken extends JFrame {
     private static String contraseñaPdf = "SIN ESTABLECER";
 //9mfpxzf7
 
-    public void show(byte[] pdfData) {
+    public boolean show(byte[] pdfData) {
 
 //        Security.addProvider( new BouncyCastleProvider() );
-        try (PDDocument document = PDDocument.load(pdfData, contraseñaPdf)) {
+        PDDocument document = null;
+        try {
+            document = PDDocument.load(pdfData, contraseñaPdf);
+        } catch (IOException ex) {
+            contraseñaPdf = JOptionPane.showInputDialog(this, "Contraseña incorrecta reinténtalo!", "Error!!!!", JOptionPane.ERROR_MESSAGE);
+            if (contraseñaPdf != "") {
+                show(pdfData);
+            }
+            Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
+            return false;
+        }
 
-            document.getClass();
-            String code = gettingPdfText(document);
+        document.getClass();
+        String code;
+        try {
+            code = gettingPdfText(document);
+
             PDPage pagina = document.getPages().get(0);
             int imgToReadLimit = document.isEncrypted() ? 32 : 16;
             GetImageToken printer = new GetImageToken(imgToReadLimit);
@@ -89,14 +103,17 @@ public class ShowingCodeAndToken extends JFrame {
                 }
                 setTextAndImage(code, token, new LinkedList<ImageIcon>(imageic.values()));
             }
+
             System.out.println(token);
 
             setVisible(true);
-//            }
+        } catch (IOException ex) {
+            Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
         } catch (Exception ex) {
             Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
-            JOptionPane.showMessageDialog(null, "Error de impresion", "Error", JOptionPane.ERROR_MESSAGE);
         }
+//            }
+        return true;
     }
 
     public void run() throws Exception {
@@ -143,6 +160,9 @@ public class ShowingCodeAndToken extends JFrame {
 
     public static void main(String... args) {
         try {
+            System.out.println("INICIANDOOO...");
+            String credentials = ShowingCodeAndToken.class.getResource("/TokenMexitel-96aa5efb80e5.json").getPath();
+            updateEnv("GOOGLE_APPLICATION_CREDENTIALS", credentials);
             TokenNotifications gmail = new TokenNotifications();
 
             ShowingCodeAndToken showing = new ShowingCodeAndToken(gmail);
@@ -150,6 +170,22 @@ public class ShowingCodeAndToken extends JFrame {
         } catch (Exception ex) {
             Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
         }
+
+    }
+
+    @SuppressWarnings({"unchecked"})
+    public static void updateEnv(String name, String val) throws ReflectiveOperationException {
+        Class<?> processEnvironmentClass = Class.forName("java.lang.ProcessEnvironment");
+        Field theEnvironmentField = processEnvironmentClass.getDeclaredField("theEnvironment");
+        theEnvironmentField.setAccessible(true);
+        Map<String, String> env = (Map<String, String>) theEnvironmentField.get(null);
+        env.clear();
+        env.put(name, val);
+        Field theCaseInsensitiveEnvironmentField = processEnvironmentClass.getDeclaredField("theCaseInsensitiveEnvironment");
+        theCaseInsensitiveEnvironmentField.setAccessible(true);
+        Map<String, String> cienv = (Map<String, String>) theCaseInsensitiveEnvironmentField.get(null);
+        cienv.clear();
+        cienv.put(name, val);
 
     }
 
@@ -221,7 +257,7 @@ public class ShowingCodeAndToken extends JFrame {
 
         JTextField newPassword = new JTextField(10);
         newPassword.setFont(new Font("mine", 0, 20));
-        JLabel actualPassword = new JLabel("CONTRASEÑA: "+contraseñaPdf);
+        JLabel actualPassword = new JLabel("CONTRASEÑA: " + contraseñaPdf);
         actualPassword.setFont(new Font("mine", 0, 18));
         JButton pdfPassword = new JButton("ACTUALIZAR CONTRASEÑA PDF");
         pdfPassword.setFont(new Font("mine", 0, 18));
