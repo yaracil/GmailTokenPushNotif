@@ -161,7 +161,7 @@ public class ShowingCodeAndToken extends JFrame {
     public static void main(String... args) {
         try {
             System.out.println("INICIANDOOO...");
-            String credentials = ShowingCodeAndToken.class.getResource("/tokenmexitel-1554436818172-185fb0ec2647.json").getPath();
+            String credentials = ShowingCodeAndToken.class.getResource("/TokenMexitelNotif-75804112b7ed.json").getPath();
             updateEnv("GOOGLE_APPLICATION_CREDENTIALS", credentials);
 
             TokenNotifications gmail = null;
@@ -227,7 +227,7 @@ public class ShowingCodeAndToken extends JFrame {
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setTitle("Online First Person Shooter");
         setAlwaysOnTop(true);
-//        setResizable(false);
+        setResizable(false);
         setLocation(350, 5);
         setDefaultCloseOperation(WindowConstants.DISPOSE_ON_CLOSE);
 
