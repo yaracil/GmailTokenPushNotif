@@ -72,17 +72,22 @@ public class TokenNotifications {
     private String subscriptionId = "NewTokens";
     Subscriber subscriber;
 
+    boolean secundary;
+
     private Gmail service;
 
     TokenSubscription subscription;
 
-    public TokenNotifications() throws Exception {
+    public TokenNotifications(boolean secundary) throws Exception {
         // Build a new authorized API client service.
 
         final NetHttpTransport HTTP_TRANSPORT = GoogleNetHttpTransport.newTrustedTransport();
         service = new Gmail.Builder(HTTP_TRANSPORT, JSON_FACTORY, getCredentials(HTTP_TRANSPORT))
                 .setApplicationName(APPLICATION_NAME)
                 .build();
+
+        this.secundary = secundary;
+
         getTokenMexitelLabelId();
         setUpSubscription();
         setUpSubscriber();
@@ -90,7 +95,7 @@ public class TokenNotifications {
 
     public void setUpSubscription() throws Exception {
         subscription = new TokenSubscription(service, PROJECT_ID, topicId, subscriptionId, idLabel_TokenMexitel);
-        lastHistoryID = subscription.setUpSuscriberNotif();
+        lastHistoryID = subscription.setUpSuscriberNotif(secundary);
     }
 
     public void setUpSubscriber() {
@@ -194,7 +199,7 @@ public class TokenNotifications {
                 subscriber.stopAsync();
             }
 
-            if (subscription != null) {
+            if (subscription != null && !secundary) {
 
                 System.out.println("Eliminando subscripcion...");
                 subscription.tearDown();

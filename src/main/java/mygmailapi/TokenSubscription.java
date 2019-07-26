@@ -63,7 +63,7 @@ public class TokenSubscription {
     private BigInteger enablingPushNotif() throws GeneralSecurityException, IOException {
         System.out.println("Enabling push notifications...");
         reqst = new WatchRequest();
-        reqst.setTopicName("projects/"+projectId +"/topics/" + topicId);
+        reqst.setTopicName("projects/" + projectId + "/topics/" + topicId);
         reqst.setLabelIds(Collections.singletonList(idLabel_TokenMexitel));
 //        reqst.setLabelFilterAction("include");
         WatchResponse resp = service.users().watch(user, reqst).execute();
@@ -72,15 +72,18 @@ public class TokenSubscription {
     }
 
     public void tearDown() throws Exception {
-            deleteTestSubscription();
-            deleteTestTopic();
+        deleteTestSubscription();
+        deleteTestTopic();
     }
 
-    public BigInteger setUpSuscriberNotif() throws Exception {
-        System.out.println("Project ID: "+projectId);
-        createTopic();
-        createPullSubscriptionExample();
-        replaceTopicPolicy();
+    public BigInteger setUpSuscriberNotif(boolean secundary) throws Exception {
+        System.out.println("Project ID: " + projectId);
+        if (!secundary) {
+            createTopic();
+            createPullSubscriptionExample();
+            replaceTopicPolicy();
+        }
+        Thread.sleep(50000);
         return enablingPushNotif();
     }
 

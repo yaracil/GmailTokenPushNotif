@@ -51,7 +51,7 @@ public class ShowingCodeAndToken extends JFrame {
     private static TokenNotifications gmail;
     private static boolean beOn = true;
     private static ShowingCodeAndToken showing;
-    private static String contraseñaPdf = "SIN ESTABLECER";
+    private static String contraseñaPdf = "";
 //9mfpxzf7
 
     public boolean show(byte[] pdfData) {
@@ -62,7 +62,7 @@ public class ShowingCodeAndToken extends JFrame {
             document = PDDocument.load(pdfData, contraseñaPdf);
         } catch (IOException ex) {
             contraseñaPdf = JOptionPane.showInputDialog(this, "Contraseña incorrecta reinténtalo!", "Error!!!!", JOptionPane.ERROR_MESSAGE);
-            if (contraseñaPdf != "") {
+            if (contraseñaPdf != null && !contraseñaPdf.equals("")) {
                 show(pdfData);
             }
             Logger.getLogger(ShowingCodeAndToken.class.getName()).log(Level.SEVERE, null, ex);
@@ -161,10 +161,16 @@ public class ShowingCodeAndToken extends JFrame {
     public static void main(String... args) {
         try {
             System.out.println("INICIANDOOO...");
-            String credentials = ShowingCodeAndToken.class.getResource("/TokenMexitel-96aa5efb80e5.json").getPath();
+            String credentials = ShowingCodeAndToken.class.getResource("/tokenmexitel-1554436818172-185fb0ec2647.json").getPath();
             updateEnv("GOOGLE_APPLICATION_CREDENTIALS", credentials);
-            TokenNotifications gmail = new TokenNotifications();
 
+            TokenNotifications gmail = null;
+
+            if (args.length != 0) {
+                gmail = new TokenNotifications(true);
+            } else {
+                gmail = new TokenNotifications(false);
+            }
             ShowingCodeAndToken showing = new ShowingCodeAndToken(gmail);
             showing.run();
         } catch (Exception ex) {
