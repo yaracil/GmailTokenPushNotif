@@ -467,6 +467,11 @@ public class WebScrapperSinPermisoTursimo_Finder extends JFrame {
 
         System.setProperty("webdriver.gecko.driver", "webdriver.gecko\\geckodriver.exe");
         while (true) {
+            try {
+                switchVPN();
+            } catch (InterruptedException ex) {
+                Logger.getLogger(WebScrapperSinPermisoTursimo_Finder.class.getName()).log(Level.SEVERE, null, ex);
+            }
             WebScrapperSinPermisoTursimo_Finder webSrcapper = null;
             try {
                 webSrcapper = new WebScrapperSinPermisoTursimo_Finder();
